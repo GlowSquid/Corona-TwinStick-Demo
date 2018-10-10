@@ -15,9 +15,9 @@ _T = display.screenOriginY
 _L = display.screenOriginX
 _R = display.viewableContentWidth-_L
 _B = display.viewableContentHeight-_T
-_F =  "TitilliumWeb-Bold"
+_F =  "TitilliumWeb"
 
-local gameState = display.newText("TwinStick Demo 0.1.0", _R-10, _B-10, _F, 16)
+local gameState = display.newText("TwinStick Demo 0.2.0", _R-10, _B-10, _F, 16)
       gameState.anchorX, gameState.anchorY = 1, 1
 
 local function keyEvents(event)

@@ -6,6 +6,10 @@ local stickLib = require("lib_analog_stick")
 local clean = require("clean")
 local physics = require("physics")
 local perspective = require("perspective")
+local enemies = require("enemies")
+
+
+initialSpawned = false
 
  
 -- -----------------------------------------------------------------------------------
@@ -47,7 +51,7 @@ function scene:create( event )
     transition.to(galaxy, {time=200000, x=_CX-500, y=_CY-700, rotation=-180})
     transition.to(galaxy, {delay=200000, time=100000, x=_CX, y=_CY, rotation=-360})
     transition.to(stars, {time=400000, rotation=-360})
-    transition.to(starsBig, {time=400000, rotation=360, onComplete=spinUniverse})
+    transition.to(starsBig, {time=400000, rotation=360, onComplete=universeSpin})
   end
   universeSpin()
 
@@ -81,14 +85,18 @@ function scene:create( event )
 
 
   local player = display.newImage("gfx/ship.png", _CX, _CY)
-        player.xScale, player.yScale = .3, .3
+        player.xScale, player.yScale = .4, .4
         player.alive = true
+        player.name = "player"
+        player:setFillColor(.5, 1, .3)
         camera:add(player, 2)
         
 
-  local navPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=.8, R=.2, G=.6, B=.8})
+  local navPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=.93, R=.2, G=.6, B=.8})
         navPad.x = _CW*.10
         navPad.y = _CH*.8
+
+  
 
   function nav(event)
     angle = navPad:getAngle()
@@ -100,8 +108,9 @@ function scene:create( event )
       return
     end
     navPad:move(player, 35, true)
-    
-    if moving == true then
+    --print(disting)
+    if not (disting == 0) then
+--    if moving == true then
       local trail = display.newImage("gfx/trail.png", player.x+math.random(-5, 5), player.y+math.random(-5, 5))
             trail.xScale, trail.yScale = player.xScale*percent+.01, player.yScale*percent*1.4+.01
             trail.rotation = angle
@@ -127,12 +136,12 @@ function scene:create( event )
               blazer.xScale, blazer.yScale = .1, .2
               blazer.alpha = 1
               blazer.rotation = angle
+              blazer.name = "blazer"
               camera:add(blazer, 2)
-              physics.addBody(blazer, "dynamic", {isSensor=true, isBullet=true, radius=50})
-
+              local offsetRectParams = { halfWidth=6, halfHeight=20, x=0, y=0}
+              physics.addBody(blazer, "dynamic", {isSensor=true, isBullet=true, box=offsetRectParams})
         local blazerSpeed = 500
-        blazer:setLinearVelocity(math.sin(math.rad(shootPad:getAngle()))*blazerSpeed, math.cos(math.rad(shootPad:getAngle())) * -blazerSpeed)
-        --blazer:applyAngularImpulse(1)
+              blazer:setLinearVelocity(math.sin(math.rad(shootPad:getAngle()))*blazerSpeed, math.cos(math.rad(shootPad:getAngle())) * -blazerSpeed)
         transition.to(blazer, {time=100, alpha=1})
         transition.to(blazer, {time=700, xScale=.1, yScale=.1, onComplete=clean.cleanObj})
       end
@@ -157,10 +166,20 @@ function scene:create( event )
 
   local function initialize()
     local function start()
-      physics.addBody(player, {radius=50})
+      --physics.addBody(player, {radius=50})
+      local offsetRectParams = { halfWidth=20, halfHeight=35, x=0, y=0}
+      physics.addBody(player, "dynamic", {box=offsetRectParams})
+      enemies.spawnAsteroid()
+      asteroidTimer = timer.performWithDelay(2000, enemies.spawnAsteroid, 0)
+      
+      local function playerLoc(event)
+        print(player:getLinearVelocity())
+      end
+      --Runtime:addEventListener("enterFrame", playerLoc)
     end
+    
     camera:setFocus(player)
-    transition.to(player, {time=1000, xScale=.15, yScale=.15, transition=easing.outSine, onComplete=start})
+    transition.to(player, {time=1000, xScale=.25, yScale=.25, transition=easing.outSine, onComplete=start})
   end
   initialize()
 
@@ -179,6 +198,7 @@ function scene:show( event )
         physics.start()
         physics.setGravity(0, 0)
         physics.setDrawMode("normal")
+        --physics.setDrawMode("hybrid")
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
