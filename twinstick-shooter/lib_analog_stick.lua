@@ -55,8 +55,6 @@ local Cos   = math.cos
 local Ceil  = math.ceil
 local Atan2 = math.atan2
 
---local mSpeed=50
-
 ----------------------------------------------------------------
 -- FUNCTION: CREATE
 ----------------------------------------------------------------

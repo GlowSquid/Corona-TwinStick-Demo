@@ -1,20 +1,8 @@
 
 local clean = require("clean")
+local drops = require("drops")
 
 local enemies = {}
-
-
-local function explode(obj)
-  explosion = display.newImage(obj.image, obj.x, obj.y)
-  --explosion:setFillColor(.8, .3, .2)
-  explosion.rotation = obj.rotation + 30
-  explosion.xScale = obj.xScale * 1.5
-  explosion.yScale = obj.yScale * 1.5
-  camera:add(explosion, 2)
-  transition.to(explosion, {time=50, rotation=20})
-  transition.to(explosion, {time=500, xScale=.01, yScale=.01, alpha=0, y=obj.y+math.random(-90, 90), rotation=obj.rotation+math.random(-90, 90), onComplete=clean.cleanObj})
-  clean.cleanObj(obj)
-end
 
 
 local function spawnAsteroid()
@@ -39,8 +27,8 @@ local function spawnAsteroid()
     asteroid[i].image = asteroidImg
     asteroid[i].health = 100
     local offsetRectParams = { halfWidth=25+asteroid[i].xScale, halfHeight=25+asteroid[i].yScale, x=0, y=0}
-    physics.addBody(asteroid[i], "dynamic", {friction=.1, bounce=.2, box=offsetRectParams})
-    local force = math.random()
+    physics.addBody(asteroid[i], "dynamic", {friction=.8, bounce=.9, box=offsetRectParams, filter=asteroidFilter})
+    local force = math.random()/10
     asteroid[i]:applyForce(force, (math.random(-1, 1) * force/2), asteroid.x, asteroid.y)
     --asteroid[i]:applyTorque(1)
     transition.fadeIn(asteroid[i], {time=1000})
@@ -50,6 +38,7 @@ local function spawnAsteroid()
     end
   end
 end
+
 
 local function enemyCollision(event)
   local enemy
@@ -62,14 +51,14 @@ local function enemyCollision(event)
     other = event.object1
   end
   if enemy then
+    if enemy.health <= 0 then
+      drops.explode(enemy)
+    end
     if other.name == "blazer" then
       enemy.health = enemy.health - 15
-      if enemy.health <= 0 then
-        explode(enemy)
-      end
       clean.cleanObj(other)
     elseif other.name == "player" then
-      enemy.health = enemy.health - 10
+      enemy.health = enemy.health - 10 - (percent * 10)
       other:setLinearVelocity(0, 0)
     end
   end

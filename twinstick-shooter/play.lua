@@ -3,10 +3,11 @@ local composer = require( "composer" )
  
 local scene = composer.newScene()
 local stickLib = require("lib_analog_stick")
-local clean = require("clean")
 local physics = require("physics")
-local perspective = require("perspective")
+local clean = require("clean")
+local player = require("player")
 local enemies = require("enemies")
+local drops = require("drops")
 
 
 initialSpawned = false
@@ -28,6 +29,8 @@ function scene:create( event )
   sceneGroup:insert(camera)
   camera.damping = 2
   camera:track()
+
+  sndShoot = audio.loadSound("snd/blazer.ogg")
 
   local nebula = display.newImage("gfx/nebula.png", _CX, _CY)
         nebula.alpha = .5
@@ -84,43 +87,53 @@ function scene:create( event )
         camera:add(station, 4)
 
 
-  local player = display.newImage("gfx/ship.png", _CX, _CY)
-        player.xScale, player.yScale = .4, .4
-        player.alive = true
-        player.name = "player"
-        player:setFillColor(.5, 1, .3)
-        camera:add(player, 2)
-        
-
   local navPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=.93, R=.2, G=.6, B=.8})
         navPad.x = _CW*.10
         navPad.y = _CH*.8
 
-  
+  local function destroyShip()
+    local function restart()
+      ship.x = _CX
+      ship.y = _CH
+      ship.alive = true
+      ship.alpha = 1
+      ship.health = ship.maxHealth
+      healthBar.width = 1200
+      Runtime:addEventListener("enterFrame", nav)
+      --Runtime:addEventListener("enterFrame", shoot)
+    end
+    ship.alpha = .01
+    drops.explode(ship)
+    percent = 0
+    transition.to(ship, {time=1000, onComplete=restart})
+  end
+
 
   function nav(event)
     angle = navPad:getAngle()
     disting = navPad:getDistance()
     percent = navPad:getPercent()
     moving = navPad:getMoving()
-    if not player.alive then
+    if not ship.alive then
       Runtime:removeEventListener("enterFrame", nav)
+      destroyShip()
       return
     end
-    navPad:move(player, 35, true)
+    navPad:move(ship, 15, true)
     --print(disting)
-    if not (disting == 0) then
---    if moving == true then
-      local trail = display.newImage("gfx/trail.png", player.x+math.random(-5, 5), player.y+math.random(-5, 5))
-            trail.xScale, trail.yScale = player.xScale*percent+.01, player.yScale*percent*1.4+.01
+    if not (disting == 0) and ship.alive == true then
+      local trail = display.newImage("gfx/trail.png", ship.x+math.random(-5, 5), ship.y+math.random(-5, 5))
+            trail.xScale, trail.yScale = ship.xScale*percent+.01, ship.yScale*percent*1.4+.01
             trail.rotation = angle
             trail.alpha = percent
             camera:add(trail, 3)
             transition.to(trail, {time=50, xScale=.01, yScale=.01, alpha=.01, onComplete=clean.cleanObj})
             --print(percent)
     end
+    -- if ship.health <= 30 and moving == true then
     
   end
+  
 
   local shootPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=0, R=.2, G=.8, B=.2})
         shootPad.x = _CW*.9
@@ -130,20 +143,22 @@ function scene:create( event )
     local padMoves = math.ceil(shootPad:getPercent()*100)
     local padHalfMoves = math.ceil(shootPad:getPercent()*50)
     function shoot()
-      if player.alive == true then
+      if ship.alive == true then
+        audio.play(sndShoot)
         local angle = shootPad:getAngle()
-        local blazer = display.newImage("gfx/blazer.png", player.x, player.y)
+        local blazer = display.newImage("gfx/blazer.png", ship.x, ship.y)
               blazer.xScale, blazer.yScale = .1, .2
               blazer.alpha = 1
               blazer.rotation = angle
               blazer.name = "blazer"
               camera:add(blazer, 2)
               local offsetRectParams = { halfWidth=6, halfHeight=20, x=0, y=0}
-              physics.addBody(blazer, "dynamic", {isSensor=true, isBullet=true, box=offsetRectParams})
+              physics.addBody(blazer, "dynamic", {isSensor=true, isBullet=true, box=offsetRectParams, filter=bulletFilter})
         local blazerSpeed = 500
               blazer:setLinearVelocity(math.sin(math.rad(shootPad:getAngle()))*blazerSpeed, math.cos(math.rad(shootPad:getAngle())) * -blazerSpeed)
         transition.to(blazer, {time=100, alpha=1})
         transition.to(blazer, {time=700, xScale=.1, yScale=.1, onComplete=clean.cleanObj})
+        
       end
     end
     if (padMoves ~= 0) then
@@ -156,30 +171,40 @@ function scene:create( event )
         shootTimer = nil
       end
     end
-    if not player.alive then
+    if not ship.alive then
       Runtime:removeEventListener("enterFrame", shoot)
       return
     end
   end
 
+
+  local healthBarBg = display.newImage(sceneGroup, "gfx/barBg.png", _CW*.375, _CH*.8)
+        healthBarBg.xScale, healthBarBg.yScale = .1, .1
+        healthBarBg.anchorX, healthBarBg.anchorY = 0, 0
+  
+  healthBar = display.newImage(sceneGroup, "gfx/bar.png", _CW*.375, _CH*.8)
+  healthBar.xScale, healthBar.yScale = .1, .1
+  healthBar:setFillColor(1, .3, .5)
+  healthBar.anchorX, healthBar.anchorY = 0, 0
+
+
   --local dummy = display.newText(sceneGroup, "", _CX, _CY, _F, 10)
 
   local function initialize()
     local function start()
-      --physics.addBody(player, {radius=50})
-      local offsetRectParams = { halfWidth=20, halfHeight=35, x=0, y=0}
-      physics.addBody(player, "dynamic", {box=offsetRectParams})
+      player.addPhysics()
       enemies.spawnAsteroid()
       asteroidTimer = timer.performWithDelay(2000, enemies.spawnAsteroid, 0)
       
       local function playerLoc(event)
-        print(player:getLinearVelocity())
+        print(ship:getLinearVelocity())
       end
       --Runtime:addEventListener("enterFrame", playerLoc)
     end
     
-    camera:setFocus(player)
-    transition.to(player, {time=1000, xScale=.25, yScale=.25, transition=easing.outSine, onComplete=start})
+    player.spawnPlayer()
+    camera:setFocus(ship)
+    transition.to(ship, {time=1000, xScale=.25, yScale=.25, transition=easing.outSine, onComplete=start})
   end
   initialize()
 
