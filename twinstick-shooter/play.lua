@@ -5,9 +5,13 @@ local scene = composer.newScene()
 local stickLib = require("lib_analog_stick")
 local physics = require("physics")
 local clean = require("clean")
+
 local player = require("player")
 local enemies = require("enemies")
+local miniMap = require("minimap")
+
 local drops = require("drops")
+
 
 
 initialSpawned = false
@@ -23,6 +27,8 @@ function scene:create( event )
   local sceneGroup = self.view
   -- Code here runs when the scene is first created but has not yet appeared on screen
 
+  --sceneGroup:insert(miniMap)
+
   camera = perspective.createView(12)
   camera:setParallax(1, 1, 1, 0.9, 0.6, 0.5, 0.4, 0.3, 0.2, 0.03, 0.02, 0.01)
   camera:setBounds(_CX-5000, _CX+5000, _CY-5000, _CY+6500)
@@ -30,16 +36,19 @@ function scene:create( event )
   camera.damping = 2
   camera:track()
 
+  sceneGroup:insert(miniMap)
+
   sndShoot = audio.loadSound("snd/blazer.ogg")
 
   local nebula = display.newImage("gfx/nebula.png", _CX, _CY)
-        nebula.alpha = .5
+        --nebula.alpha = .5
         nebula.xScale, nebula.yScale = 3.5, 3.5
         camera:add(nebula, 9)
+        nebula:setFillColor(1, 1, 1, .5)
 
   local starsBig = display.newImage("gfx/starsBig.png", _CX, _CY)
         camera:add(starsBig, 11)
-  local stars = display.newImage("gfx/stars.png", _CX, _CY)
+  local stars = display.newImage("gfx/stars.png", _CX, _CY-200)
         camera:add(stars, 12)
   
   local galaxy = display.newImage("gfx/galaxy.png", _CX, _CY)
@@ -49,14 +58,19 @@ function scene:create( event )
 
   local function universeSpin()
     galaxy.rotation = 0
-    stars.rotation = 0
     starsBig.rotation = 0
     transition.to(galaxy, {time=200000, x=_CX-500, y=_CY-700, rotation=-180})
     transition.to(galaxy, {delay=200000, time=100000, x=_CX, y=_CY, rotation=-360})
-    transition.to(stars, {time=400000, rotation=-360})
-    transition.to(starsBig, {time=400000, rotation=360, onComplete=universeSpin})
+    transition.to(stars, {time=200000, y=_CY+200, x=_CX-100, transition=easing.inOutSine})
+    transition.to(stars, {delay=200000, time=200000, y=_CY-200, x=_CX+100, transition=easing.inOutSine})
+    transition.to(starsBig, {time=400000, rotation=360})
+    transition.to(nebula.fill, {time=100000, r=.2, g=.2, b=1})
+    transition.to(nebula.fill, {delay=100000, time=100000, r=0, g=0, b=0})
+    transition.to(nebula.fill, {delay=200000, time=100000, r=math.random(0, 1), g=math.random(0, 1), b=math.random(0, 1)})
+    transition.to(nebula.fill, {delay=300000, time=100000, r=1, g=1, b=1, onComplete=universeSpin})
   end
   universeSpin()
+
 
   local function starBlink()
     delayTime = math.random(5000, 15000)
@@ -65,8 +79,8 @@ function scene:create( event )
   end
   starBlink()
 
-  local planet = display.newImage("gfx/planet_19.png", _CX-300, _CY+1200)
-        planet.xScale, planet.yScale = 2.8, 2.8
+  local planet = display.newImage("gfx/planet_19.png", _CX-300, _CY+1000)
+        planet.xScale, planet.yScale = 2.5, 2.5
         camera:add(planet, 8)
 
   local planet2 = display.newImage("gfx/planet_18.png", _CX-500, _CY+2000)
@@ -77,19 +91,31 @@ function scene:create( event )
   local function planetRotate()
     transition.to(planet, {time=400000, x=_CX-600, y=_CY+900, rotation=180})
     transition.to(planet2, {time=400000, x=_CX-800, y=_CY+1700, rotation=180})
-    transition.to(planet, {delay=400000, x=_CX-300, y=_CY+1200, time=400000, rotation=360})
+    transition.to(planet, {delay=400000, x=_CX-300, y=_CY+1000, time=400000, rotation=360})
     transition.to(planet2, {delay=400000, x=_CX-500, y=_CY+2000, time=400000, rotation=360, onComplete=planetRotate})
 
   end
   planetRotate()
 
-  local station = display.newImage("gfx/satellite.png", _CX-1400, _CY+600)
-        camera:add(station, 4)
+
+  local satellite = display.newImage("gfx/satellite.png", _CX-1000, _CY+600)
+        camera:add(satellite, 4)
+        satellite.mini = display.newImage("gfx/satellite.png", satellite.x, satellite.y)
+        satellite.mini.myObj = satellite
+        satellite.mini.rotation = satellite.rotation
+        satellite.mini.enterFrame = miniMap.mmEnterFrame
+        miniMap.mmFrame:insert(satellite.mini)
+        Runtime:addEventListener("enterFrame", satellite.mini)
 
 
-  local navPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=.93, R=.2, G=.6, B=.8})
-        navPad.x = _CW*.10
-        navPad.y = _CH*.8
+  local playerX = display.newText(sceneGroup, "X = 0", _L+5, _CH*.001, _F, 10)
+        playerX.anchorX, playerX.anchorY = 0, 0
+  local playerY = display.newText(sceneGroup, "Y = 0", _L+5, _CH*.03, _F, 10)
+        playerY.anchorX, playerY.anchorY = 0, 0
+  local playerAngle = display.newText(sceneGroup, "Angle = 0", _L+5, _CH*.06, _F, 10)
+        playerAngle.anchorX, playerAngle.anchorY = 0, 0
+  local playerSpeed = display.newText(sceneGroup, "Speed = 0.00", _L+5, _CH*.09, _F, 10)
+        playerSpeed.anchorX, playerSpeed.anchorY = 0, 0
 
   local function destroyShip()
     local function restart()
@@ -102,11 +128,17 @@ function scene:create( event )
       Runtime:addEventListener("enterFrame", nav)
       --Runtime:addEventListener("enterFrame", shoot)
     end
+    healthBar.width = 1
     ship.alpha = .01
     drops.explode(ship)
     percent = 0
     transition.to(ship, {time=1000, onComplete=restart})
   end
+
+
+  local navPad = stickLib.NewStick({thumbSize=8, borderSize=52, snapBackSpeed=.93, R=.2, G=.6, B=.8})
+        navPad.x = _CW*.10
+        navPad.y = _CH*.8
 
 
   function nav(event)
@@ -122,6 +154,20 @@ function scene:create( event )
     navPad:move(ship, 15, true)
     --print(disting)
     if not (disting == 0) and ship.alive == true then
+      playerX.text = "X = " .. math.floor(ship.x)
+      playerY.text = "Y = " .. math.floor(ship.y)
+      playerAngle.text = "Angle = " .. angle
+      playerSpeed.text = "Speed = " .. math.floor(percent * 100) / 100
+      if ship.x <= -5000 then
+        ship.x = -5000
+      elseif ship.x >= 5500 then
+        ship.x = 5500
+      end
+      if ship.y <= -5000 then
+        ship.y = -5000
+      elseif ship.y >= 6800 then
+        ship.y = 6800
+      end
       local trail = display.newImage("gfx/trail.png", ship.x+math.random(-5, 5), ship.y+math.random(-5, 5))
             trail.xScale, trail.yScale = ship.xScale*percent+.01, ship.yScale*percent*1.4+.01
             trail.rotation = angle
@@ -129,6 +175,7 @@ function scene:create( event )
             camera:add(trail, 3)
             transition.to(trail, {time=50, xScale=.01, yScale=.01, alpha=.01, onComplete=clean.cleanObj})
             --print(percent)
+
     end
     -- if ship.health <= 30 and moving == true then
     
@@ -158,6 +205,16 @@ function scene:create( event )
               blazer:setLinearVelocity(math.sin(math.rad(shootPad:getAngle()))*blazerSpeed, math.cos(math.rad(shootPad:getAngle())) * -blazerSpeed)
         transition.to(blazer, {time=100, alpha=1})
         transition.to(blazer, {time=700, xScale=.1, yScale=.1, onComplete=clean.cleanObj})
+
+        blazer.mini = display.newImage("gfx/miniBlazer.png", blazer.x, blazer.y)
+        blazer.mini.myObj = blazer
+        --blazer.mini.rotation = blazer.rotation
+        blazer.mini.xScale, blazer.mini.yScale = .3, .3
+        blazer.mini.alpha = .01
+        transition.fadeIn(blazer.mini, {time=20})
+        blazer.mini.enterFrame = miniMap.mmEnterFrame
+        miniMap.mmFrame:insert(blazer.mini)
+        Runtime:addEventListener("enterFrame", blazer.mini)
         
       end
     end
@@ -195,7 +252,7 @@ function scene:create( event )
       player.addPhysics()
       enemies.spawnAsteroid()
       asteroidTimer = timer.performWithDelay(2000, enemies.spawnAsteroid, 0)
-      
+
       local function playerLoc(event)
         print(ship:getLinearVelocity())
       end

@@ -37,7 +37,7 @@ end
 Runtime:addEventListener("key", keyEvents)
 
 
-local gameState = display.newText("TwinStick Demo 0.3.0", _R-10, _B-10, _F, 16)
+local gameState = display.newText("TwinStick Demo 0.4.0", _R-10, _B-10, _F, 16)
       gameState.anchorX, gameState.anchorY = 1, 1
 
 

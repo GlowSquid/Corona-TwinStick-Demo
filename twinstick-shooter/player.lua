@@ -1,7 +1,9 @@
+local miniMap = require("minimap")
 
 local player = {}
 
 local maxBarWidth = 1200
+local invulnerable = false
 
 
 local function addPhysics()
@@ -20,6 +22,17 @@ local function spawnPlayer()
   ship.maxHealth = 100
   ship:setFillColor(.5, 1, .3)
   camera:add(ship, 2)
+  ship.mini = display.newImage("gfx/ship.png", ship.x, ship.y)
+  ship.mini.myObj = ship
+  --ship.mini.rotation = ship.rotation
+  ship.mini.enterFrame = miniMap.mmEnterFrame
+  miniMap.mmFrame:insert(ship.mini)
+  Runtime:addEventListener("enterFrame", ship.mini)
+end
+
+
+local function vulnerable()
+  invulnerable = false
 end
 
 
@@ -37,10 +50,14 @@ local function playerCollision(event)
     if ship.health <= 0 then
       ship.alive = false
     end
-    if other.name == "asteroid" then
-      ship.health = ship.health - 10 - (percent * 10)
-      print(ship.health)
-      healthBar.width = (ship.health / ship.maxHealth) * maxBarWidth
+    if invulnerable == false then
+      if other.name == "asteroid" then
+        ship.health = ship.health - 10 - (percent * 10)
+        print(ship.health)
+        healthBar.width = (ship.health / ship.maxHealth) * maxBarWidth
+        invulnerable = true
+        transition.to(ship, {time=1000, onComplete=vulnerable})
+      end
     end
   end
 end
