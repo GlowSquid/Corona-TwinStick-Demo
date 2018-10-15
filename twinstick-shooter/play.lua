@@ -1,17 +1,15 @@
 
 local composer = require( "composer" )
- 
 local scene = composer.newScene()
+
+local perspective = require("perspective")
 local stickLib = require("lib_analog_stick")
 local physics = require("physics")
 local clean = require("clean")
-
 local player = require("player")
 local enemies = require("enemies")
 local miniMap = require("minimap")
-
 local drops = require("drops")
-
 
 
 initialSpawned = false
@@ -27,8 +25,6 @@ function scene:create( event )
   local sceneGroup = self.view
   -- Code here runs when the scene is first created but has not yet appeared on screen
 
-  --sceneGroup:insert(miniMap)
-
   camera = perspective.createView(12)
   camera:setParallax(1, 1, 1, 0.9, 0.6, 0.5, 0.4, 0.3, 0.2, 0.03, 0.02, 0.01)
   camera:setBounds(_CX-5000, _CX+5000, _CY-5000, _CY+6500)
@@ -38,7 +34,8 @@ function scene:create( event )
 
   sceneGroup:insert(miniMap)
 
-  sndShoot = audio.loadSound("snd/blazer.ogg")
+  local sndShoot = audio.loadSound("snd/blazer.ogg")
+
 
   local nebula = display.newImage("gfx/nebula.png", _CX, _CY)
         --nebula.alpha = .5
@@ -61,9 +58,13 @@ function scene:create( event )
     starsBig.rotation = 0
     transition.to(galaxy, {time=200000, x=_CX-500, y=_CY-700, rotation=-180})
     transition.to(galaxy, {delay=200000, time=100000, x=_CX, y=_CY, rotation=-360})
-    transition.to(stars, {time=200000, y=_CY+200, x=_CX-100, transition=easing.inOutSine})
-    transition.to(stars, {delay=200000, time=200000, y=_CY-200, x=_CX+100, transition=easing.inOutSine})
+    transition.to(stars, {time=200000, y=_CY+200, x=_CX-100, xScale=1.2, yScale=1.2, transition=easing.inOutSine})
+    transition.to(stars, {delay=200000, time=200000, y=_CY-200, xScale=1, yScale=1, x=_CX+100, transition=easing.inOutSine})
     transition.to(starsBig, {time=400000, rotation=360})
+    transition.to(starsBig, {time=100000, xScale=1.5, yScale=1.5})
+    transition.to(starsBig, {delay=100000, time=100000, xScale=1, yScale=1})
+    transition.to(starsBig, {delay=200000, time=100000, xScale=1.5, yScale=1.5})
+    transition.to(starsBig, {delay=300000, time=100000, xScale=1, yScale=1})
     transition.to(nebula.fill, {time=100000, r=.2, g=.2, b=1})
     transition.to(nebula.fill, {delay=100000, time=100000, r=0, g=0, b=0})
     transition.to(nebula.fill, {delay=200000, time=100000, r=math.random(0, 1), g=math.random(0, 1), b=math.random(0, 1)})
@@ -79,6 +80,7 @@ function scene:create( event )
   end
   starBlink()
 
+
   local planet = display.newImage("gfx/planet_19.png", _CX-300, _CY+1000)
         planet.xScale, planet.yScale = 2.5, 2.5
         camera:add(planet, 8)
@@ -86,16 +88,31 @@ function scene:create( event )
   local planet2 = display.newImage("gfx/planet_18.png", _CX-500, _CY+2000)
         planet2.xScale, planet2.yScale = .5, .5
         camera:add(planet2, 6)
-        
 
-  local function planetRotate()
-    transition.to(planet, {time=400000, x=_CX-600, y=_CY+900, rotation=180})
-    transition.to(planet2, {time=400000, x=_CX-800, y=_CY+1700, rotation=180})
-    transition.to(planet, {delay=400000, x=_CX-300, y=_CY+1000, time=400000, rotation=360})
-    transition.to(planet2, {delay=400000, x=_CX-500, y=_CY+2000, time=400000, rotation=360, onComplete=planetRotate})
-
+  local function planetRotate(obj)
+    if obj == planet then
+      startX = _CX-300
+      startY = _CY+1000
+      R = 1000
+    elseif obj == planet2 then
+      startX = _CX-500
+      startY = _CY+2000
+      R = 800
+    end
+    startX=_CX
+    startY=_CY
+    R = 1000
+    obj.rotation = 0
+    transition.to(obj, {time=800000, rotation=360})
+    transition.to(obj, {time=400000, y=startY-R, transition=easing.inOutSine})
+    transition.to(obj, {delay=400000, time=400000, y=startY+R, transition=easing.inOutSine})
+    transition.to(obj, {time=200000, x=startX-R, transition=easing.outSine})
+    transition.to(obj, {delay=200000, time=200000, x=startX, transition=easing.inSine})
+    transition.to(obj, {delay=400000, time=200000, x=startX+R, transition=easing.outSine})
+    transition.to(obj, {delay=600000, time=200000, x=startX, transition=easing.inSine, onComplete=planetRotate})
   end
-  planetRotate()
+  planetRotate(planet)
+  planetRotate(planet2)
 
 
   local satellite = display.newImage("gfx/satellite.png", _CX-1000, _CY+600)
@@ -108,14 +125,16 @@ function scene:create( event )
         Runtime:addEventListener("enterFrame", satellite.mini)
 
 
-  local playerX = display.newText(sceneGroup, "X = 0", _L+5, _CH*.001, _F, 10)
+  -- Visual Stats
+  local playerX = display.newText(sceneGroup, "X = 0", _L+5, _CH*.15, _F, 10)
         playerX.anchorX, playerX.anchorY = 0, 0
-  local playerY = display.newText(sceneGroup, "Y = 0", _L+5, _CH*.03, _F, 10)
+  local playerY = display.newText(sceneGroup, "Y = 0", _L+5, _CH*.18, _F, 10)
         playerY.anchorX, playerY.anchorY = 0, 0
-  local playerAngle = display.newText(sceneGroup, "Angle = 0", _L+5, _CH*.06, _F, 10)
+  local playerAngle = display.newText(sceneGroup, "Angle = 0", _L+5, _CH*.21, _F, 10)
         playerAngle.anchorX, playerAngle.anchorY = 0, 0
-  local playerSpeed = display.newText(sceneGroup, "Speed = 0.00", _L+5, _CH*.09, _F, 10)
+  local playerSpeed = display.newText(sceneGroup, "Speed = 0.00", _L+5, _CH*.24, _F, 10)
         playerSpeed.anchorX, playerSpeed.anchorY = 0, 0
+
 
   local function destroyShip()
     local function restart()
@@ -136,10 +155,10 @@ function scene:create( event )
   end
 
 
+  -- Left joypad
   local navPad = stickLib.NewStick({thumbSize=8, borderSize=52, snapBackSpeed=.93, R=.2, G=.6, B=.8})
         navPad.x = _CW*.10
         navPad.y = _CH*.8
-
 
   function nav(event)
     angle = navPad:getAngle()
@@ -151,13 +170,16 @@ function scene:create( event )
       destroyShip()
       return
     end
-    navPad:move(ship, 15, true)
-    --print(disting)
+    navPad:move(ship, 15, true) -- Max player speed
     if not (disting == 0) and ship.alive == true then
       playerX.text = "X = " .. math.floor(ship.x)
       playerY.text = "Y = " .. math.floor(ship.y)
       playerAngle.text = "Angle = " .. angle
       playerSpeed.text = "Speed = " .. math.floor(percent * 100) / 100
+      -- Zoom effect
+      ship.xScale = .3 - (percent/10)
+      ship.yScale = .3 - (percent/10)
+      -- Enforcing borders
       if ship.x <= -5000 then
         ship.x = -5000
       elseif ship.x >= 5500 then
@@ -168,13 +190,13 @@ function scene:create( event )
       elseif ship.y >= 6800 then
         ship.y = 6800
       end
+
       local trail = display.newImage("gfx/trail.png", ship.x+math.random(-5, 5), ship.y+math.random(-5, 5))
             trail.xScale, trail.yScale = ship.xScale*percent+.01, ship.yScale*percent*1.4+.01
             trail.rotation = angle
             trail.alpha = percent
             camera:add(trail, 3)
             transition.to(trail, {time=50, xScale=.01, yScale=.01, alpha=.01, onComplete=clean.cleanObj})
-            --print(percent)
 
     end
     -- if ship.health <= 30 and moving == true then
@@ -182,7 +204,8 @@ function scene:create( event )
   end
   
 
-  local shootPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=0, R=.2, G=.8, B=.2})
+  -- Right joypad
+  local shootPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=0, R=1, G=.6, B=0})
         shootPad.x = _CW*.9
         shootPad.y = _CH*.8
 
@@ -204,7 +227,7 @@ function scene:create( event )
         local blazerSpeed = 500
               blazer:setLinearVelocity(math.sin(math.rad(shootPad:getAngle()))*blazerSpeed, math.cos(math.rad(shootPad:getAngle())) * -blazerSpeed)
         transition.to(blazer, {time=100, alpha=1})
-        transition.to(blazer, {time=700, xScale=.1, yScale=.1, onComplete=clean.cleanObj})
+        transition.to(blazer, {time=1000, xScale=.05, yScale=.1, onComplete=clean.cleanObj})
 
         blazer.mini = display.newImage("gfx/miniBlazer.png", blazer.x, blazer.y)
         blazer.mini.myObj = blazer
@@ -234,6 +257,14 @@ function scene:create( event )
     end
   end
 
+  local function healthRegen()
+    if ship.health < ship.maxHealth then
+      ship.health = ship.health + 1
+      --healthBar.width = (ship.health / ship.maxHealth) * 1200
+      transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
+    end
+  end
+
 
   local healthBarBg = display.newImage(sceneGroup, "gfx/barBg.png", _CW*.375, _CH*.8)
         healthBarBg.xScale, healthBarBg.yScale = .1, .1
@@ -244,28 +275,46 @@ function scene:create( event )
   healthBar:setFillColor(1, .3, .5)
   healthBar.anchorX, healthBar.anchorY = 0, 0
 
+  
+  creditsPanel = display.newRoundedRect(_CW*.05, _CH*.0495, _CW*.12, _CH*.05, 2)
+  creditsPanel.strokeWidth = 1
+  creditsPanel:setFillColor(0, 0, .1, .3)
+  creditsPanel:setStrokeColor(.1, .1, .4)
+  creditsText = display.newText("0", creditsPanel.x+20, creditsPanel.y, _F, 16)
+  creditsText.anchorX = 1
+  creditsText:setFillColor(.75, 1, .75)
+  creditsIcon = display.newImage("gfx/credit.png", creditsPanel.x-10, creditsPanel.y-4)
+  creditsIcon.xScale, creditsIcon.yScale = .03, .03
+  creditsIcon.rotation = 20
+  creditsIcon:setFillColor(1, 1, .2)
+  creditsIcon.anchorX, creditsIcon.anchorY = 1, 0
 
-  --local dummy = display.newText(sceneGroup, "", _CX, _CY, _F, 10)
+  plusPanel = display.newRoundedRect(_CW*.12, _CH*.0495, _CW*.04, _CH*.05, 2)
+  plusPanel.strokeWidth = 1
+  plusPanel:setFillColor(.1, .1, .4)
+  plusPanel:setStrokeColor(.1, .1, .4)
+  creditsPlus = display.newText("+", plusPanel.x+.5, plusPanel.y-2.5, _F, 26)
+  creditsPlus:setFillColor(1, 1, .2)
+
 
   local function initialize()
     local function start()
       player.addPhysics()
       enemies.spawnAsteroid()
-      asteroidTimer = timer.performWithDelay(2000, enemies.spawnAsteroid, 0)
+      local asteroidTimer = timer.performWithDelay(2000, enemies.spawnAsteroid, 0)
+      local regenTimer = timer.performWithDelay(1000, healthRegen, 0)
 
       local function playerLoc(event)
         print(ship:getLinearVelocity())
       end
       --Runtime:addEventListener("enterFrame", playerLoc)
     end
-    
     player.spawnPlayer()
     camera:setFocus(ship)
     transition.to(ship, {time=1000, xScale=.25, yScale=.25, transition=easing.outSine, onComplete=start})
   end
   initialize()
 
-          
 end
  
  

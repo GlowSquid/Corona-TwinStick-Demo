@@ -2,7 +2,7 @@
 display.setStatusBar(display.HiddenStatusBar)
 system.activate("multitouch")
 
-perspective = require("perspective")
+
 local composer = require("composer")
 composer.isDebug = true
 
@@ -37,8 +37,8 @@ end
 Runtime:addEventListener("key", keyEvents)
 
 
-local gameState = display.newText("TwinStick Demo 0.4.0", _R-10, _B-10, _F, 16)
-      gameState.anchorX, gameState.anchorY = 1, 1
+--local gameState = display.newText("TwinStick Demo 0.5.0", _R-10, _B-10, _F, 16)
+--      gameState.anchorX, gameState.anchorY = 1, 1
 
 
 composer.gotoScene("play")

@@ -1,9 +1,11 @@
 local miniMap = require("minimap")
+local clean = require("clean")
 
 local player = {}
 
 local maxBarWidth = 1200
 local invulnerable = false
+local credits = 0
 
 
 local function addPhysics()
@@ -50,11 +52,29 @@ local function playerCollision(event)
     if ship.health <= 0 then
       ship.alive = false
     end
+
+    if other.name == "healthDrop" then
+      ship.health = ship.health + 10
+      if ship.health >= ship.maxHealth then
+        ship.health = ship.maxHealth
+      end
+      transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
+      clean.cleanObj(other)
+    elseif other.name == "credit" then
+      credits = credits + 1
+      creditsText.text = credits
+      clean.cleanObj(other)
+    end
+
     if invulnerable == false then
       if other.name == "asteroid" then
         ship.health = ship.health - 10 - (percent * 10)
-        print(ship.health)
-        healthBar.width = (ship.health / ship.maxHealth) * maxBarWidth
+        transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
+        invulnerable = true
+        transition.to(ship, {time=1000, onComplete=vulnerable})
+      elseif other.name == "kamikaze" then
+        ship.health = ship.health - 25
+        transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
         invulnerable = true
         transition.to(ship, {time=1000, onComplete=vulnerable})
       end

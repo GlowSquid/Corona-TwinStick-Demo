@@ -122,7 +122,7 @@ function NewStick( Props )
 
         end
 
-		---------------------------------------------
+        ---------------------------------------------
         -- METHOD: SLIDE AN OBJECT
         ---------------------------------------------
         function Group:slide(Obj, maxSpeed)
@@ -140,12 +140,12 @@ function NewStick( Props )
 			end
         end
 
-		---------------------------------------------
-		-- METHOD: ROTATE AN OBJECT
-		---------------------------------------------
-		function Group:rotate(Obj, rotate)
-				if rotate == true then Obj.rotation = self.angle end
-		end
+        ---------------------------------------------
+        -- METHOD: ROTATE AN OBJECT
+        ---------------------------------------------
+        function Group:rotate(Obj, rotate)
+                        if rotate == true then Obj.rotation = self.angle end
+        end
 
         ---------------------------------------------
         -- GETTER METHODS
