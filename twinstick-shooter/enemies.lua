@@ -11,15 +11,15 @@ local dummy = display.newText("", _CX, _CY, _F, 2)
 local function spawnAsteroid()
   local asteroid = {}
   if initialSpawned == false then
-    numAsteroids = 200
+    numAsteroids = 300
   else
-    numAsteroids = 2
+    numAsteroids = 1
   end
   for i = 1, numAsteroids do
     local asteroidImg = ("gfx/ast" .. (math.random(1, 7)) .. ".png")
     asteroid[i] = display.newImage(asteroidImg)
-    asteroid[i].x = math.random(-5000, 5000)
-    asteroid[i].y = math.random(-5000, 6500)
+    asteroid[i].x = math.random(-5500, 5500)
+    asteroid[i].y = math.random(-5500, 7000)
     asteroid[i].xScale = math.random(1.1, 2) / 5
     asteroid[i].yScale = math.random(1.1, 2) / 5
     asteroid[i].rotation = math.random(0,359)
@@ -32,6 +32,7 @@ local function spawnAsteroid()
     end
     asteroid[i].image = asteroidImg
     asteroid[i].health = 100
+    asteroid[i].alive = true
     local offsetRectParams = { halfWidth=25+asteroid[i].xScale, halfHeight=25+asteroid[i].yScale, x=0, y=0}
     physics.addBody(asteroid[i], "dynamic", {friction=.8, bounce=.9, box=offsetRectParams, filter=asteroidFilter})
     local force = math.random()/10
@@ -53,17 +54,20 @@ local function spawnAsteroid()
   end
 end
 
+
 local function spawnKamikaze()
   local function charge(obj)
-    local function despawn()
-      clean.cleanObj(obj)
-      --drops.explode(obj)
+    local function despawn(obj)
+      if obj.alive == true then
+        drops.explode(obj)
+        audio.play(sndBoom)
+      end
     end
-    physics.addBody(obj, "dynamic", {filter=enemyFilter})
+    physics.addBody(obj, "dynamic", {radius=25, filter=enemyFilter})
     local rad = math.sqrt ((obj.x - ship.x)^2 + (obj.y - ship.y)^2)
     
-    transition.to(obj, {time=500, rotation=math.deg(math.atan2(ship.y-obj.y, ship.x-obj.x)) + 90})
-    transition.to(obj, {delay=500, time=rad*2, x=ship.x, y=ship.y, onComplete=despawn, transition=easing.inSine})
+    transition.to(obj, {time=800, rotation=math.deg(math.atan2(ship.y-obj.y, ship.x-obj.x)) + 90})
+    transition.to(obj, {delay=800, time=rad*2, x=ship.x, y=ship.y, transition=easing.inSine, onComplete=despawn})
 
   end
 
@@ -71,7 +75,8 @@ local function spawnKamikaze()
         kamikaze.image = "gfx/kamikaze.png"
         kamikaze.type = "enemy"
         kamikaze.name = "kamikaze"
-        kamikaze.health = 40
+        kamikaze.health = 80
+        kamikaze.alive = true
         kamikaze.xScale, kamikaze.yScale = .3, .3
         kamikaze.rotation = math.random(0, 359)
         camera:add(kamikaze, 3)
@@ -99,27 +104,28 @@ local function enemyCollision(event)
     other = event.object1
   end
   if enemy then
-    if enemy.health <= 0 then
-      if enemy.name == "asteroid" then
+    local function checkEnemyHealth()
+      if enemy.health <= 0 then
+        if enemy.name == "not only asteroid" then
+          dummy.x = enemy.x
+          dummy.y = enemy.y
+          spawnKamikaze()
+        end
         drops.explode(enemy)
-      elseif enemy.name == "kamikaze" then
-        drops.explode(enemy)
-      elseif enemy.name == "not only asteroid" then
-        dummy.x = enemy.x
-        dummy.y = enemy.y
-        spawnKamikaze()
-        drops.explode(enemy)
-      else
-        print(enemy.name)
+        audio.play(sndBoom)
       end
     end
+    
     if other.name == "blazer" then
       enemy.health = enemy.health - 15
       clean.cleanObj(other)
+      checkEnemyHealth()
     elseif other.name == "player" then
       enemy.health = enemy.health - 10 - (percent * 10)
       other:setLinearVelocity(0, 0)
+      checkEnemyHealth()
     end
+    
   end
 end
 Runtime:addEventListener("collision", enemyCollision)

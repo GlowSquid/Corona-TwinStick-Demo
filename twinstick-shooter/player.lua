@@ -1,11 +1,12 @@
 local miniMap = require("minimap")
 local clean = require("clean")
+local drops = require("drops")
 
 local player = {}
 
 local maxBarWidth = 1200
 local invulnerable = false
-local credits = 0
+
 
 
 local function addPhysics()
@@ -17,7 +18,7 @@ end
 local function spawnPlayer()
   ship = display.newImage("gfx/ship.png", _CX, _CY)
   ship.image = "gfx/ship.png"
-  ship.xScale, ship.yScale = .3, .3
+  ship.xScale, ship.yScale = .4, .4
   ship.alive = true
   ship.name = "player"
   ship.health = 100
@@ -33,11 +34,6 @@ local function spawnPlayer()
 end
 
 
-local function vulnerable()
-  invulnerable = false
-end
-
-
 local function playerCollision(event)
   local ship
   local other
@@ -49,35 +45,47 @@ local function playerCollision(event)
     other = event.object1
   end
   if ship then
-    if ship.health <= 0 then
-      ship.alive = false
+    local function vulnerable()
+      invulnerable = false
+    end
+    local function checkHealth()
+      if ship.health <= 0 then
+        ship.alive = false
+        healthBar.width = 1
+      else
+        transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
+      end
     end
 
     if other.name == "healthDrop" then
+      audio.play(sndLoot)
       ship.health = ship.health + 10
       if ship.health >= ship.maxHealth then
         ship.health = ship.maxHealth
       end
       transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
       clean.cleanObj(other)
+      audio.play(sndLoot)
     elseif other.name == "credit" then
+      audio.play(sndLoot)
       credits = credits + 1
       creditsText.text = credits
       clean.cleanObj(other)
     end
 
     if invulnerable == false then
-      if other.name == "asteroid" then
+      if other.name == "asteroid" or other.name == "not only asteroid" then
         ship.health = ship.health - 10 - (percent * 10)
-        transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
         invulnerable = true
-        transition.to(ship, {time=1000, onComplete=vulnerable})
+        
       elseif other.name == "kamikaze" then
         ship.health = ship.health - 25
-        transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
         invulnerable = true
-        transition.to(ship, {time=1000, onComplete=vulnerable})
+        drops.explode(other)
+        audio.play(sndBoom)
       end
+      transition.to(ship, {time=800, onComplete=vulnerable})
+      checkHealth()
     end
   end
 end

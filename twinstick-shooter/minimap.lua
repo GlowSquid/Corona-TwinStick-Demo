@@ -5,7 +5,7 @@ local miniMap = {}
 
   local mmSize = 2
 
-  local scopeText = display.newText("2x", _CW*.987, _CH*.387, _F, 16)
+  local scopeText = display.newText("2x", _R-20, _CH*.387, _F, 16)
         scopeText:setFillColor(.7, .7, .7)
 
   local miniMap = display.newGroup()

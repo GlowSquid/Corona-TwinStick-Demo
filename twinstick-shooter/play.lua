@@ -13,7 +13,7 @@ local drops = require("drops")
 
 
 initialSpawned = false
-
+credits = 0
  
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -33,8 +33,6 @@ function scene:create( event )
   camera:track()
 
   sceneGroup:insert(miniMap)
-
-  local sndShoot = audio.loadSound("snd/blazer.ogg")
 
 
   local nebula = display.newImage("gfx/nebula.png", _CX, _CY)
@@ -151,12 +149,13 @@ function scene:create( event )
     ship.alpha = .01
     drops.explode(ship)
     percent = 0
+    audio.play(sndBoom)
     transition.to(ship, {time=1000, onComplete=restart})
   end
 
 
   -- Left joypad
-  local navPad = stickLib.NewStick({thumbSize=8, borderSize=52, snapBackSpeed=.93, R=.2, G=.6, B=.8})
+  local navPad = stickLib.NewStick({thumbSize=8, borderSize=26, snapBackSpeed=.93, R=.2, G=.6, B=.8})
         navPad.x = _CW*.10
         navPad.y = _CH*.8
 
@@ -170,15 +169,15 @@ function scene:create( event )
       destroyShip()
       return
     end
-    navPad:move(ship, 15, true) -- Max player speed
+    navPad:move(ship, 10, true) -- Max player speed
     if not (disting == 0) and ship.alive == true then
       playerX.text = "X = " .. math.floor(ship.x)
       playerY.text = "Y = " .. math.floor(ship.y)
       playerAngle.text = "Angle = " .. angle
       playerSpeed.text = "Speed = " .. math.floor(percent * 100) / 100
       -- Zoom effect
-      ship.xScale = .3 - (percent/10)
-      ship.yScale = .3 - (percent/10)
+      ship.xScale = .25 - (percent/15)
+      ship.yScale = .25 - (percent/15)
       -- Enforcing borders
       if ship.x <= -5000 then
         ship.x = -5000
@@ -197,15 +196,12 @@ function scene:create( event )
             trail.alpha = percent
             camera:add(trail, 3)
             transition.to(trail, {time=50, xScale=.01, yScale=.01, alpha=.01, onComplete=clean.cleanObj})
-
     end
-    -- if ship.health <= 30 and moving == true then
-    
   end
   
 
   -- Right joypad
-  local shootPad = stickLib.NewStick({thumbSize=8, borderSize=32, snapBackSpeed=0, R=1, G=.6, B=0})
+  local shootPad = stickLib.NewStick({thumbSize=8, borderSize=26, snapBackSpeed=0, R=1, G=.6, B=0})
         shootPad.x = _CW*.9
         shootPad.y = _CH*.8
 
@@ -224,7 +220,7 @@ function scene:create( event )
               camera:add(blazer, 2)
               local offsetRectParams = { halfWidth=6, halfHeight=20, x=0, y=0}
               physics.addBody(blazer, "dynamic", {isSensor=true, isBullet=true, box=offsetRectParams, filter=bulletFilter})
-        local blazerSpeed = 500
+        local blazerSpeed = 1000
               blazer:setLinearVelocity(math.sin(math.rad(shootPad:getAngle()))*blazerSpeed, math.cos(math.rad(shootPad:getAngle())) * -blazerSpeed)
         transition.to(blazer, {time=100, alpha=1})
         transition.to(blazer, {time=1000, xScale=.05, yScale=.1, onComplete=clean.cleanObj})
@@ -260,7 +256,6 @@ function scene:create( event )
   local function healthRegen()
     if ship.health < ship.maxHealth then
       ship.health = ship.health + 1
-      --healthBar.width = (ship.health / ship.maxHealth) * 1200
       transition.to(healthBar, {time=200, width=(ship.health / ship.maxHealth) * 1200})
     end
   end
@@ -275,33 +270,37 @@ function scene:create( event )
   healthBar:setFillColor(1, .3, .5)
   healthBar.anchorX, healthBar.anchorY = 0, 0
 
-  
-  creditsPanel = display.newRoundedRect(_CW*.05, _CH*.0495, _CW*.12, _CH*.05, 2)
-  creditsPanel.strokeWidth = 1
-  creditsPanel:setFillColor(0, 0, .1, .3)
-  creditsPanel:setStrokeColor(.1, .1, .4)
-  creditsText = display.newText("0", creditsPanel.x+20, creditsPanel.y, _F, 16)
-  creditsText.anchorX = 1
-  creditsText:setFillColor(.75, 1, .75)
-  creditsIcon = display.newImage("gfx/credit.png", creditsPanel.x-10, creditsPanel.y-4)
-  creditsIcon.xScale, creditsIcon.yScale = .03, .03
-  creditsIcon.rotation = 20
-  creditsIcon:setFillColor(1, 1, .2)
-  creditsIcon.anchorX, creditsIcon.anchorY = 1, 0
+  local function happy()
+    credits = credits +1
+    creditsText.text = credits
+  end
+  local creditsPanel = display.newRoundedRect(_CW*.05, _CH*.0495, _CW*.12, _CH*.05, 2)
+        creditsPanel.strokeWidth = 1
+        creditsPanel:setFillColor(0, 0, .1, .3)
+        creditsPanel:setStrokeColor(.1, .1, .4)
+        creditsText = display.newText("0", creditsPanel.x+20, creditsPanel.y, _F, 16)
+        creditsText.anchorX = 1
+        creditsText:setFillColor(.75, 1, .75)
+  local creditsIcon = display.newImage("gfx/credit.png", creditsPanel.x-10, creditsPanel.y-4)
+        creditsIcon.xScale, creditsIcon.yScale = .03, .03
+        creditsIcon.rotation = 20
+        creditsIcon:setFillColor(1, 1, .2)
+        creditsIcon.anchorX, creditsIcon.anchorY = 1, 0
 
-  plusPanel = display.newRoundedRect(_CW*.12, _CH*.0495, _CW*.04, _CH*.05, 2)
-  plusPanel.strokeWidth = 1
-  plusPanel:setFillColor(.1, .1, .4)
-  plusPanel:setStrokeColor(.1, .1, .4)
-  creditsPlus = display.newText("+", plusPanel.x+.5, plusPanel.y-2.5, _F, 26)
-  creditsPlus:setFillColor(1, 1, .2)
+  local plusPanel = display.newRoundedRect(_CW*.12, _CH*.0495, _CW*.04, _CH*.05, 2)
+        plusPanel.strokeWidth = 1
+        plusPanel:setFillColor(.1, .1, .4)
+        plusPanel:setStrokeColor(.1, .1, .4)
+  local creditsPlus = display.newText("+", plusPanel.x+.5, plusPanel.y-2.5, _F, 26)
+        creditsPlus:setFillColor(1, 1, .2)
+        creditsPlus:addEventListener("touch", happy)
 
 
   local function initialize()
     local function start()
       player.addPhysics()
       enemies.spawnAsteroid()
-      local asteroidTimer = timer.performWithDelay(2000, enemies.spawnAsteroid, 0)
+      local asteroidTimer = timer.performWithDelay(1000, enemies.spawnAsteroid, 0)
       local regenTimer = timer.performWithDelay(1000, healthRegen, 0)
 
       local function playerLoc(event)

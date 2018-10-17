@@ -19,11 +19,17 @@ _F =  "TitilliumWeb"
 
 
 -- Collision Filters
-local playerFilter = {categoryBits = 1, maskBits = 22}
-local asteroidFilter = {categoryBits = 2, maskBits = 9}
-local enemyFilter  = {categoryBits = 4, maskBits = 9}
-local bulletFilter = {categoryBits = 8, maskbits = 6}
-local dropFilter = {categoryBits = 16, maskbits = 1}
+playerFilter = {categoryBits = 1, maskBits = 22}
+asteroidFilter = {categoryBits = 2, maskBits = 11}
+enemyFilter  = {categoryBits = 4, maskBits = 9}
+bulletFilter = {categoryBits = 8, maskbits = 6}
+dropFilter = {categoryBits = 16, maskbits = 1}
+
+-- Load Sound
+sndShoot = audio.loadSound("snd/blazer.ogg")
+sndLoot = audio.loadSound("snd/loot.ogg")
+sndBoom = audio.loadSound("snd/boom.ogg")
+
 
 -- Exiting with back-key
 local function keyEvents(event)
@@ -35,10 +41,6 @@ local function keyEvents(event)
   return false
 end
 Runtime:addEventListener("key", keyEvents)
-
-
---local gameState = display.newText("TwinStick Demo 0.5.0", _R-10, _B-10, _F, 16)
---      gameState.anchorX, gameState.anchorY = 1, 1
 
 
 composer.gotoScene("play")

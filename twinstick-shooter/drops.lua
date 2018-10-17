@@ -47,7 +47,7 @@ local function explode(obj)
   explosion.yScale = obj.yScale * 1.5
   camera:add(explosion, 2)
 
-  if not (obj.name == "not only asteroid") then
+  if not(obj.name == "not only asteroid" or obj.name == "player") then
     transition.to(explosion, {time=50, rotation=20, onComplete=spawnDrop})
   else
     transition.to(explosion, {time=50, rotation=20})
