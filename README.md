@@ -17,4 +17,4 @@ This is the game I would develop more on if I had time. It's too cool not to sha
 - Zoomable mini-map that follows player location while tracking nearby objects
 
 
-![](https://github.com/GlowSquid/Corona-TwinStick-Demo/blob/master/screenshots/battle.webm)
+![](https://github.com/GlowSquid/Corona-TwinStick-Demo/blob/master/screenshots/battle.gif)
