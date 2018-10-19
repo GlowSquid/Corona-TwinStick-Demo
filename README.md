@@ -1,20 +1,25 @@
-# Corona TwinStick-Demo
+# Corona TwinStick-Shooter Template
 
-Twin-stick space shooter template made using Corona
-
-
-This is the game I would develop more on if I had time. It's too cool not to share. Project is MIT-licenced. Feel free to fork it, just go through the [credits](https://github.com/GlowSquid/Corona-TwinStick-Demo/blob/master/credits.md) of images and sound not made by me.
+Twin-stick space shooter template/demo made using Corona
 
 
-![](https://github.com/GlowSquid/Corona-TwinStick-Demo/blob/master/screenshots/0.5.1.png)
+This is the game I would develop more on if I had time. It's too cool not to be shared. Project is MIT-licenced. Feel free to fork it, just go through the [credits](https://github.com/GlowSquid/Corona-TwinStick-Shooter-Template/blob/master/credits.md) of images and sound not made by me.
+
+
+![](https://github.com/GlowSquid/Corona-TwinStick-Shooter-Template/blob/master/screenshots/1.0.0.png)
 
 
 ## Features:
 
-- Dynamic universe. Galaxy, planets and asteroids is in motion
+- A dynamic universe. Galaxy, planets and asteroids is in constant motion
 - "Joypads" controlling movement and bullets.
-- Trail-effect based on players movement-speed
+- Healthbar with auto-regeneration as well as health power-ups dropping from asteroids
+- Dynamic trail-effect based on players movement-speed
 - Zoomable mini-map that follows player location while tracking nearby objects
 
 
-![](https://github.com/GlowSquid/Corona-TwinStick-Demo/blob/master/screenshots/battle.gif)
+![](https://github.com/GlowSquid/Corona-TwinStick-Shooter-Template/blob/master/screenshots/battle.gif)
+
+
+
+More screenshots at [](https://glowsquid.com/twin-stick-shooter-demo/)
