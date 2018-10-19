@@ -22,4 +22,4 @@ This is the game I would develop more on if I had time. It's too cool not to be 
 
 
 
-More screenshots at [](https://glowsquid.com/twin-stick-shooter-demo/)
+More screenshots at [https://glowsquid.com/twin-stick-shooter-demo/](https://glowsquid.com/twin-stick-shooter-demo/)
